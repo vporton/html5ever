@@ -50,11 +50,11 @@ where
 }
 
 #[cfg(test)]
-#[cfg(feature = "api_v2")]
 mod test1 {
     use crate::{ExpandedName, ParseOpts, local_name, expanded_name};
     use crate::driver::{Attribute, Cow, QualName, TreeSink, parse_document};
     use crate::tree_builder::ElementFlags;
+    #[cfg(feature = "api_v2")]
     use crate::interface::tree_builder::SuperfluousClosingElement;
     use crate::{ns, namespace_url};
     use crate::tendril::{NonAtomic, Tendril};
@@ -94,8 +94,13 @@ mod test1 {
         ) -> Self::Handle {
             {}
         }
+        #[cfg(feature = "api_v2")]
         fn pop_v2(&mut self, _node: &Self::Handle) -> Result<(), SuperfluousClosingElement> {
             Ok(())
+        }
+        #[cfg(not(feature = "api_v2"))]
+        fn pop(&mut self, _node: &Self::Handle) {
+            ()
         }
         fn create_comment(&mut self, _text: Tendril<UTF8, NonAtomic>) -> Self::Handle { () }
         fn create_pi(
