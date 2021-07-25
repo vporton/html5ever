@@ -11,9 +11,6 @@
 //!
 //! It can be used by a parser to create the DOM graph structure in memory.
 
-#[cfg(feature = "api_v2")]
-use log::warn;
-
 use crate::interface::{Attribute, ExpandedName, QualName};
 use std::borrow::Cow;
 use tendril::StrTendril;

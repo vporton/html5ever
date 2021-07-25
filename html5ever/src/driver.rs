@@ -9,12 +9,12 @@
 
 //! High-level interface to the parser.
 
+use std::borrow::Cow;
+
 use crate::buffer_queue::BufferQueue;
 use crate::tokenizer::{Tokenizer, TokenizerOpts, TokenizerResult};
 use crate::tree_builder::{create_element, TreeBuilder, TreeBuilderOpts, TreeSink};
 use crate::{Attribute, QualName};
-
-use std::borrow::Cow;
 
 use crate::tendril;
 use crate::tendril::stream::{TendrilSink, Utf8LossyDecoder};
@@ -51,6 +51,12 @@ where
 
 #[cfg(test)]
 mod test1 {
+    #[cfg(feature = "api_v2")]
+    use log::warn;
+    
+    #[cfg(test)]
+    use std::sync::Once;
+    
     use crate::{ExpandedName, ParseOpts, local_name, expanded_name};
     use crate::driver::{Attribute, Cow, QualName, TreeSink, parse_document};
     use crate::tree_builder::ElementFlags;
@@ -62,6 +68,18 @@ mod test1 {
     use crate::tree_builder::{NodeOrText, QuirksMode};
     use markup5ever::tendril::TendrilSink;
 
+    #[cfg(test)]
+    static INIT: Once = Once::new();
+    
+    /// Setup function that is only run once, even if called multiple times.
+    #[cfg(test)]
+    fn setup_tests() {
+        #[allow(unused)]
+        INIT.call_once(|| {
+            env_logger::init();
+        });
+    }
+    
     pub struct MyTreeSink { }
     
     impl MyTreeSink {
@@ -151,6 +169,7 @@ mod test1 {
 
     #[test]
     fn test_parse_simple_html() {
+        setup_tests();
         // test_parse_html(b"");
         test_parse_html(b"<html><head><title>xx</title></head><body>wer</body></html>");
     }
