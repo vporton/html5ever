@@ -49,6 +49,108 @@ where
     }
 }
 
+#[cfg(test)]
+#[cfg(feature = "api_v2")]
+mod test1 {
+    use crate::{ExpandedName, ParseOpts, local_name, expanded_name};
+    use crate::driver::{Attribute, Cow, QualName, TreeSink, parse_document};
+    use crate::tree_builder::ElementFlags;
+    use crate::interface::tree_builder::SuperfluousClosingElement;
+    use crate::{ns, namespace_url};
+    use crate::tendril::{NonAtomic, Tendril};
+    use crate::tendril::fmt::UTF8;    
+    use crate::tree_builder::{NodeOrText, QuirksMode};
+    use markup5ever::tendril::TendrilSink;
+
+    pub struct MyTreeSink { }
+    
+    impl MyTreeSink {
+        pub fn new() -> MyTreeSink {
+            Self { }
+        }
+    }
+    
+    const NONE_NAME: ExpandedName = expanded_name!("", "");
+    
+    impl TreeSink for &mut MyTreeSink {
+        type Output = ();
+        type Handle = ();
+    
+        fn finish(self) -> Self::Output {
+            ()
+        }
+        fn parse_error(&mut self, _msg: Cow<'static, str>) { }
+        fn get_document(&mut self) -> Self::Handle {
+            ()
+        }
+        fn elem_name<'a>(&'a self, _target: &'a Self::Handle) -> ExpandedName<'a> {
+            NONE_NAME
+        }
+        fn create_element(
+            &mut self, 
+            _name: QualName, 
+            _attrs: Vec<Attribute>, 
+            _flags: ElementFlags
+        ) -> Self::Handle {
+            {}
+        }
+        fn pop_v2(&mut self, _node: &Self::Handle) -> Result<(), SuperfluousClosingElement> {
+            Ok(())
+        }
+        fn create_comment(&mut self, _text: Tendril<UTF8, NonAtomic>) -> Self::Handle { () }
+        fn create_pi(
+            &mut self, 
+            _target: Tendril<UTF8, NonAtomic>, 
+            _data: Tendril<UTF8, NonAtomic>
+        ) -> Self::Handle { () }
+        fn append(&mut self, _parent: &Self::Handle, _child: NodeOrText<Self::Handle>) { }
+        fn append_based_on_parent_node(
+            &mut self, 
+            _element: &Self::Handle, 
+            _prev_element: &Self::Handle, 
+            _child: NodeOrText<Self::Handle>
+        ) { }
+        fn append_doctype_to_document(
+            &mut self, 
+            _name: Tendril<UTF8, NonAtomic>, 
+            _public_id: Tendril<UTF8, NonAtomic>, 
+            _system_id: Tendril<UTF8, NonAtomic>
+        ) { }
+        fn get_template_contents(&mut self, _target: &Self::Handle) -> Self::Handle { () }
+        fn same_node(&self, _x: &Self::Handle, _y: &Self::Handle) -> bool { false }
+        fn set_quirks_mode(&mut self, _mode: QuirksMode) { }
+        fn append_before_sibling(
+            &mut self, 
+            _sibling: &Self::Handle, 
+            _new_node: NodeOrText<Self::Handle>
+        ) { }
+        fn add_attrs_if_missing(
+            &mut self, 
+            _target: &Self::Handle, 
+            _attrs: Vec<Attribute>
+        ) { }
+        fn remove_from_parent(&mut self, _target: &Self::Handle) { }
+        fn reparent_children(
+            &mut self, 
+            _node: &Self::Handle, 
+            _new_parent: &Self::Handle
+        ) { }
+    }
+
+    fn test_parse_html(s: &[u8]) {
+        let mut tree_sink = MyTreeSink::new();
+        let mut html_parser = parse_document(&mut tree_sink, ParseOpts::default());
+        let tendril = Tendril::try_from_byte_slice(s).unwrap();
+        html_parser.process(tendril);
+    }
+
+    #[test]
+    fn test_parse_simple_html() {
+        // test_parse_html(b"");
+        test_parse_html(b"<html><head><title>xx</title></head><body>wer</body></html>");
+    }
+}
+
 /// Parse an HTML fragment
 ///
 /// The returned value implements `tendril::TendrilSink`

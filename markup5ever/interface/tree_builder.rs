@@ -84,6 +84,7 @@ pub enum TreeBuilderError {
 }
 
 // TODO: Error message.
+#[cfg(feature = "api_v2")]
 #[derive(Debug)]
 pub struct SuperfluousClosingElement {}
 
